@@ -1,0 +1,35 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7293abb..27232ce 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -92,6 +92,14 @@ tvm_option(USE_TENSORRT_RUNTIME "Build with TensorRT runtime" OFF)
+ tvm_option(USE_RUST_EXT "Build with Rust based compiler extensions, STATIC, DYNAMIC, or OFF" OFF)
+ tvm_option(USE_VITIS_AI "Build with VITIS-AI Codegen support" OFF)
+
++# gcov
++OPTION(ENABLE_GCOV "Enable gcov (debug, Linux builds only)" OFF)
++IF (ENABLE_GCOV AND NOT WIN32 AND NOT APPLE)
++  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
++  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
++  SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage -lgcov")
++ENDIF()
++
+ # include directories
+ include_directories(${CMAKE_INCLUDE_PATH})
+ include_directories("include")
+diff --git a/build/config.cmake b/build/config.cmake
+index 30c0eab..2fab5b6 100644
+--- a/build/config.cmake
++++ b/build/config.cmake
+@@ -122,7 +122,7 @@ set(USE_MICRO_STANDALONE_RUNTIME OFF)
+ # - OFF: disable llvm, note this will disable CPU codegen
+ #        which is needed for most cases
+ # - /path/to/llvm-config: enable specific LLVM when multiple llvm-dev is available.
+-set(USE_LLVM OFF)
++set(USE_LLVM ON)
+
+ #---------------------------------------------
+ # Contrib libraries
+--
+2.25.1
+
