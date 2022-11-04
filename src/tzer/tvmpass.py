@@ -1,4 +1,5 @@
 import random
+import types
 
 import tvm
 import tvm.tir.transform.transform
@@ -84,6 +85,50 @@ class PassNode:
                 return self.tvm_pass(''.join([random.choice(letters) for _ in range(random.randint(1,128))]))
             else:
                 return self.tvm_pass(self.args)
+
+    def mutate_and_record_info(self):
+        if not self.need_arguments:
+            return [self.tvm_pass(), {"pass_name": self.name, "arg_type": "None", "args": None}]
+        else:
+            if isinstance(self.args, list) or isinstance(self.args, tuple):
+                args = random.choice(self.args)
+                if args is None:
+                    arg_type = "None"
+                elif type(args) == int:
+                    arg_type = "int"
+                elif type(args) == str:
+                    arg_type = "str"
+                else:
+                    assert type(args) == bool
+                    arg_type = "bool"
+            elif isinstance(self.args, types.FunctionType):
+                arg_type = "function"
+                args = "filter_target"
+                return [self.tvm_pass(self.args), {"pass_name": self.name, "arg_type": arg_type, "args": args}]
+            elif self.args == str:
+                arg_type = "str"
+                letters = string.ascii_letters + string.digits
+                args = ''.join([random.choice(letters) for _ in range(random.randint(1, 128))])
+            else:
+                assert self.args == int
+                arg_type = "int"
+                args = random.randint(8, 128)
+            return [self.tvm_pass(args), {"pass_name": self.name, "arg_type": arg_type, "args": args}]
+
+    def mutate_use_recorded_info(self, arg_type: str, args=None):
+        if not self.need_arguments:
+            assert arg_type == "None"
+            return self.tvm_pass()
+        else:
+            if arg_type == "None":
+                assert args is None
+                return self.tvm_pass(None)
+            elif arg_type == "function":
+                assert isinstance(self.args, types.FunctionType)
+                return self.tvm_pass(self.args)  # filter_target
+            else:
+                assert arg_type in {"str", "bool", "int"}
+                return self.tvm_pass(args)
 
     def __str__(self) -> str:
         return f'{self.__class__.__name__}({self.name})'

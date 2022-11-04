@@ -1,3 +1,5 @@
+import json
+
 import dill as pickle
 from typing import List, Optional
 from tvm import tir
@@ -25,7 +27,9 @@ _COMPILATION_RATE_ = 'compile_rate.txt'
 _TIR_BY_TIME_NAME_ = 'tir_by_time.pickle'
 _ITERATION_ = 'iterations.txt'
 _VALID_SEED_NEW_COV_COUNT_ = 'valid_seed_new_cov_count.txt'
-
+_JSON_DUMP_ = 'tir_json_dump'
+_FUNC_BY_ITER_PREFIX_ = 'func_by_iter_'
+_PASS_BY_ITER_PREFIX_ = 'pass_by_iter_'
 class TVMFuzzerUsageError(Exception):
     def __init__(self, msg):
         self.message = msg
@@ -35,7 +39,9 @@ class TVMFuzzerUsageError(Exception):
 
 
 class Reporter:
-    def __init__(self, report_folder=None, use_coverage=True, record_tir=False, use_existing_dir=False) -> None:
+    def __init__(self, report_folder=None, use_coverage=True, record_tir=False, use_existing_dir=False, record_tir_json=False) -> None:
+        self.record_tir_json = record_tir_json
+        self.num_dumped_tir = 0
         # Checks
         tvm_home = os.getenv('TVM_HOME')
         if not tvm_home or not os.path.exists(tvm_home):
@@ -56,6 +62,8 @@ class Reporter:
                     f'{self.report_folder} already exist... We want an empty folder to report...')
             os.mkdir(self.report_folder)
             print(f'Create report folder: {self.report_folder}')
+            if self.record_tir_json:
+                os.mkdir(os.path.join(self.report_folder, _JSON_DUMP_))
 
         print(f'Using `{self.report_folder}` as the fuzzing report folder')
         with open(os.path.join(self.report_folder, _METADATA_NAME_), 'w') as f:
@@ -91,6 +99,22 @@ class Reporter:
         assert self.tir_by_time_file
         pickle.dump((time.perf_counter() - self.start_time, tir, passes),
                     self.tir_by_time_file)
+
+    def record_tir_and_passes_json(self, func: tir.PrimFunc, pass_info: List[dict]):
+        with open(os.path.join(
+                self.report_folder,
+                _JSON_DUMP_,
+                _FUNC_BY_ITER_PREFIX_ + str(self.num_dumped_tir) + ".json"),
+                'w') as f:
+            func_dict = json.loads(tvm.ir.save_json(func))
+            json.dump(func_dict, f, indent=2)
+        with open(os.path.join(
+                self.report_folder,
+                _JSON_DUMP_,
+                _PASS_BY_ITER_PREFIX_ + str(self.num_dumped_tir) + ".json"),
+                'w') as f:
+            json.dump(pass_info, f, indent=2)
+        self.num_dumped_tir += 1
 
     def record_coverage(self, t=None):
         if t is None:

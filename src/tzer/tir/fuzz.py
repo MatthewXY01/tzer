@@ -60,7 +60,7 @@ class Fuzzer:
 
         self.pass_mutator = SimplePassMutator()
         self.reporter = report.Reporter(
-            config.report_folder, config.use_coverage, config.record_tir)
+            config.report_folder, config.use_coverage, config.record_tir, record_tir_json=config.record_tir_json)
 
         self.iter = 0
         self.n_filtered_ast = 0
@@ -71,7 +71,7 @@ class Fuzzer:
             use_none=self.config.use_none,
             max_gen_size=self.config.max_generation_size)
 
-    def run_and_get_cov_increase(self, func: tir.PrimFunc, passes=None) -> Tuple[int, float]:
+    def run_and_get_cov_increase(self, func: tir.PrimFunc, passes=None, pass_info=None) -> Tuple[int, float]:
         assert isinstance(func, tir.PrimFunc) or func is None
         if passes is None:
             passes = []
@@ -116,6 +116,9 @@ class Fuzzer:
 
         if self.reporter.tir_by_time_file:
             self.reporter.record_tir_and_passes(func, passes)
+
+        if self.reporter.record_tir_json:
+            self.reporter.record_tir_and_passes_json(func, pass_info)
 
         return cov_increase, time.time() - t0, useful_pass_mask
 
@@ -183,12 +186,18 @@ class Fuzzer:
             self.update_loop_info(pbar, 0, 0, 'gen-failure')
             return
 
-        passes = [p.mutate()
-                  for p in pass_mutant] if pass_mutant is not None else None
+        if self.config.record_tir_json:
+            passes_with_info = [p.mutate_and_record_info() for p in pass_mutant] if pass_mutant is not None else None
+            passes = [x[0] for x in passes_with_info] if passes_with_info is not None else None
+            info = [x[1] for x in passes_with_info] if passes_with_info is not None else None
+        else:
+            passes = [p.mutate()
+                      for p in pass_mutant] if pass_mutant is not None else None
+            info = None
 
         n_pass_compilation_prev = self.n_pass_compilation
         cov_increase, build_time, useful_pass_mask = self.run_and_get_cov_increase(
-            func_mutant, passes)
+            func_mutant, passes, info)
 
         if (cov_increase > 0 or not self.config.use_coverage_feedback) \
                 and self.n_pass_compilation != n_pass_compilation_prev:

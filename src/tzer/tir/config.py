@@ -20,6 +20,7 @@ class Config:
     use_coverage_feedback: bool
     mutate_control_flow_with_general_purpose_mutators: bool
     record_tir: bool
+    record_tir_json: bool
     use_pass: bool
     use_none: bool
     diff_test_rounds: int
@@ -71,6 +72,7 @@ def config_from_args(args) -> Config:
         use_coverage=os.getenv('NO_COV') is None,
         use_coverage_feedback=os.getenv('NO_FEEDBACK') is None,
         record_tir=os.getenv('TIR_REC') is not None,
+        record_tir_json=os.getenv('TIR_REC_JSON') is not None,
         use_pass=os.getenv('PASS') is not None,
         use_none=os.getenv('NONE') is not None,
         mutate_control_flow_with_general_purpose_mutators=os.getenv(
