@@ -2,7 +2,7 @@ set -e
 
 echo "Installing latest TVM... If it fails you may want to use earlier versions."
 git clone https://github.com/apache/tvm.git --recursive
-cd tvm && git reset --hard 9b034d729f80f6f19106ae435221e4c48df44618 && cd ..
+cd tvm && git reset --hard 7b3a22e465dd6aca4729504a19beb4bc23312755 && cd ..
 cp -r tvm tvm-no-cov
 
 echo "Start building TVM with coverage instrumentation"
