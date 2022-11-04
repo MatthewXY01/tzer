@@ -19,11 +19,11 @@ echo "To use TVM-gcov, copy and paste the following shell statements:"
 echo "export TVM_HOME=$(pwd)"
 echo "export PYTHONPATH=$TVM_HOME/python"
 
-cp -r tvm tvm-no-cov
+cp -r tvm tvm-memcov
 
 echo "Start building TVM with coverage instrumentation"
-cd tvm
-patch -p1 < ../memcov4tvm.patch
+cd tvm-memcov
+patch -p1 < ../memcov4tvm.patch # cmake/config.make is directly patched, which is then copied to build/
 mkdir -p build && cd build
 echo "We use LLVM Sanitizers. Please ensure you have clang & compiler-rt installed."
 cp ../cmake/config.cmake .
@@ -33,8 +33,8 @@ cmake .. -DCMAKE_BUILD_TYPE=Release \
          -DFETCHCONTENT_QUIET=0
 make -j$(nproc)
 cd ..
-echo "Successfully installed TVM-cov!"
-echo "To use TVM-cov, copy and paste the following shell statements:"
+echo "Successfully installed TVM-memcov!"
+echo "To use TVM-memcov, copy and paste the following shell statements:"
 echo "export TVM_HOME=$(pwd)"
 echo "export PYTHONPATH=$TVM_HOME/python"
 
