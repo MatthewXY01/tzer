@@ -19,6 +19,7 @@ echo "To use TVM-gcov, copy and paste the following shell statements:"
 echo "export TVM_HOME=$(pwd)"
 echo "export PYTHONPATH=$TVM_HOME/python"
 
+cd ..
 cp -r tvm tvm-memcov
 
 echo "Start building TVM with coverage instrumentation"
