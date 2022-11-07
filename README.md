@@ -127,6 +127,25 @@ Note that fuzzing is performance-sensitive: To obtain reliable results, evaluati
 </div>
 </details>
 
+<details><summary><b>Get coverage using the Gcov-tool</b> <i>[click to expand]</i></summary>
+<div>
+
+```shell
+# (1): 240 minutes tzer-fuzzing and save TIRs (in json) of all iterations.
+TVM_HOME=$TVM_MEMCOV_HOME PYTHONPATH=$TVM_HOME/python PASS=1 LOW=1 TIR_REC_JSON=1 python3 src/main_tir.py --fuzz-time 240 --report-folder log-240m-w-pass --tolerance 4
+
+# (2): Compile dumped TIRs using TVM.
+TVM_HOME=$TVM_GCOV_HOME python3 src/tzer_gcov_test.py --tvm-home ${TVM_HOME} --report-folder log-240m-w-pass
+
+# (3): Get the coverage information using Gcov-tool.
+cd $TVM_GCOV_HOME
+gcovr -r . --html -o 240m.html
+gcovr -r . --json-summary-pretty -o 240m.json
+```
+
+</div>
+</details>
+
 ## Installation
 
 <details><summary><b>Expected requirements</b> <i>[click to expand]</i></summary>
